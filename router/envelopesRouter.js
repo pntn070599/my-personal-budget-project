@@ -44,4 +44,14 @@ router.get("/", envelopesController.getEnvelopes);
  */
 router.delete("/:id", envelopesController.deleteEnvelopes);
 
+router.post("/", envelopesController.generateEnvelope);
+
+router.get("/id/:id", envelopesController.findById);
+
+router.get("/title/:title", envelopesController.findByTitle);
+
+router.get("/budget/:budget", envelopesController.findByBudget);
+
+router.post("/transfer", envelopesController.transfer);
+
 module.exports = router;
