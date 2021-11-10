@@ -1,3 +1,3 @@
-const envelopes = require("./db.json");
+const envelopes = require("./dbSetup");
 
 module.exports = envelopes;

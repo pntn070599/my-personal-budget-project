@@ -1,21 +1,28 @@
 const fs = require("fs");
-
+const { db } = require("../config/dbSetup");
 module.exports = {
-  findById(items, id) {
-    const result = items.find((item) => item.id === parseInt(id));
+  async findById(id) {
+    const query = `SELECT * FROM envelope WHERE id = '${id}';`;
+    let result = await db.query(query);
+    console.log(result.rowCount);
+    if (result.rowCount === 0) return null;
 
-    if (!result) console.log("Id not found!");
-
-    return result;
+    return result.rows;
   },
 
-  findByTitle(items, title) {
-    console.log(title);
-    const result = items.find((item) => item.title === title);
-    console.log(result);
-    if (!result) return null;
+  async findByTitle(title) {
+    const query = `SELECT * FROM envelope WHERE title = '${title}';`;
+    let result = await db.query(query);
+    console.log(result.rowCount);
+    if (result.rowCount === 0) return null;
 
-    return result;
+    return result.rows;
+  },
+
+  async getAllEnvelopes() {
+    const query = "SELECT * FROM envelope;";
+    const allEnvelopes = await db.query(query);
+    return allEnvelopes.rows;
   },
 
   deleteById(items, id) {
@@ -30,28 +37,27 @@ module.exports = {
     return items;
   },
 
-  generate(items, input) {
-    items.sort((a, b) => {
-      if (a.id > b.id) return 1;
-      else if (a.id < b.id) return -1;
-    });
-
-    let newItem = {
-      id: items[items.length - 1].id + 1,
-      title: input.title,
-      budget: parseInt(input.budget),
-    };
-
-    items.push(newItem);
-    return items;
+  async generate() {
+    try {
+      const query = `SELECT MAX(id) FROM envelope;`;
+      const id = await db.query(query);
+      if (id.rowCount === 0)
+        return { status: false, message: "something went wrong" };
+      console.log(id.rows);
+      return id.rows;
+    } catch (error) {
+      console.log(error);
+      return { status: false, message: "something went wrong" };
+    }
   },
 
-  findByBudget(items, budget) {
-    const result = items.find((item) => item.budget === parseInt(budget));
+  async findByBudget(budget) {
+    const query = `SELECT * FROM envelope WHERE budget = '${budget}';`;
+    let result = await db.query(query);
+    console.log(result.rowCount);
+    if (result.rowCount === 0) return null;
 
-    if (!result) console.log(`Item with budget: ${budget} not found`);
-
-    return result;
+    return result.rows;
   },
 
   /**
@@ -62,7 +68,7 @@ module.exports = {
    * @param {number} budget - how much want to send?
    * @return {array<object>}
    */
-  transfer(items, item1, item2, budget) {
+  async transfer(items, item1, item2, budget) {
     const index1 = items.findIndex((item) => item.id === item1);
     const index2 = items.findIndex((item) => item.id === item2);
     if (index1 === -1 || index2 === -1)
@@ -79,28 +85,56 @@ module.exports = {
         error: "Can not transfer itself",
       };
 
-    if (item1.budget < budget)
+    if (items[index1].budget < budget)
       return {
         status: false,
         message: "failed to transfer",
         error: "Budget is not enough to transfer",
       };
 
+    // if (items[index2].budget < budget)
+
     items[index1].budget -= budget;
+    await this.updateBudget(items[index1]);
     items[index2].budget += budget;
+    await this.updateBudget(items[index2]);
 
     return { status: true, items: items, message: "transfer success" };
   },
 
-  async writeDB(items) {
+  async updateBudget(item) {
     try {
-      await fs.writeFileSync(
-        __dirname + "/../config/db.json",
-        JSON.stringify(items)
-      );
-      console.log("done writing db");
+      const query = `UPDATE envelope SET budget = ${item.budget} WHERE id = ${item.id}`;
+      const result = await db.query(query);
+      if (result.rowCount === 0)
+        return { status: false, message: "Something went wrong" };
+
+      return {
+        status: true,
+        message: "Insert envelop succeed",
+        data: item,
+      };
     } catch (error) {
-      console.error(error);
+      console.log(error);
+      return { status: false, message: "Something went wrong" };
+    }
+  },
+
+  async writeDB(item) {
+    try {
+      const query = `INSERT INTO envelope VALUES (${item.id}, '${item.title}', ${item.budget});`;
+      const result = await db.query(query);
+      if (result.rowCount === 0)
+        return { status: false, message: "Something went wrong" };
+
+      return {
+        status: true,
+        message: "Insert envelop succeed",
+        data: item,
+      };
+    } catch (error) {
+      console.log(error);
+      return { status: false, message: "Something went wrong" };
     }
   },
 };
