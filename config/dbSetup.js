@@ -1,9 +1,9 @@
 const { Pool } = require("pg");
 const credentials = {
-  user: "hmfhuftukrxxyl",
-  host: "ec2-44-193-182-0.compute-1.amazonaws.com",
-  database: "d50erpl81qn3to",
-  password: "371f0104954b7ffc560218236721f8c0989e7f883273f95081e480c8c627fdc8",
+  user: "postgres",
+  host: "localhost",
+  database: "personal_budget",
+  password: "test",
   port: 5432,
 };
 
@@ -49,7 +49,7 @@ const setup = async () => {
     console.log(`DB initialized successfully`);
   } catch (error) {
     console.log(`DB init failed`);
-    console.log(error);
+    // console.log(error);
   }
 };
 
