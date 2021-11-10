@@ -49,7 +49,7 @@ const setup = async () => {
     console.log(`DB initialized successfully`);
   } catch (error) {
     console.log(`DB init failed`);
-    // console.log(error);
+    console.log(error);
   }
 };
 
